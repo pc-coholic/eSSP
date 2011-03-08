@@ -37,7 +37,7 @@ def crc(command):
 
 	return crc
 
-def prepcommand(command, crc):
+def prepcommandOLD(command, crc):
 	prepedstring = '\\x7F'
 
 	for i in range(0, len(command)):
@@ -45,4 +45,16 @@ def prepcommand(command, crc):
 	
 	prepedstring += '\\x' + crc[0][2:4] + '\\x' + crc[1][2:4]
 
+	return prepedstring
+	
+def prepcommand(command, crc):
+	prepedstring = '7F'
+
+	for i in range(0, len(command)):
+		prepedstring += command[i][2:4]
+	
+	prepedstring += crc[0][2:4] + crc[1][2:4]
+	
+	prepedstring = prepedstring.decode('hex')
+	
 	return prepedstring
