@@ -2,7 +2,7 @@ from struct import *
 import logging
 
 LOG_FILENAME = 'logs/eSSP.log'
-logging.basicConfig(filename=LOG_FILENAME,level=logging.DEBUG)
+#logging.basicConfig(filename=LOG_FILENAME,level=logging.DEBUG)
 
 ssp_sequence = '0x80'
 ssp_address = 0
@@ -159,3 +159,19 @@ def prepcommand(command, crc):
 	prepedstring = prepedstring.decode('hex')
 	
 	return prepedstring
+
+def arrayify_response(response):
+	array = []
+	for i in range( 0, len(response) ):
+		array += [hex(ord(response[i]))]
+	
+	return array
+
+def calc_serial(response):
+	serial = 0
+	
+	response = arrayify_response(response)
+	for i in range(4, 8):
+		serial += int(response[i], 16) << (8 * (7-i) )
+	
+	return serial
