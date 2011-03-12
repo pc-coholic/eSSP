@@ -4,16 +4,41 @@ import logging
 LOG_FILENAME = 'logs/eSSP.log'
 #logging.basicConfig(filename=LOG_FILENAME,level=logging.DEBUG)
 
+ssp_sequence = '0x80'
+ssp_address = 0
+
 def sync():
-	command = ['0x80', '0x01', '0x11']
+	global ssp_sequence
+	
+	#set ssp_sequence to 0x00, so next will be 0x80 by default
+	ssp_sequence = '0x00'
+	
+	command = [getseq(), '0x01', '0x11']
+	return command
+	
+def reset():
+	command = [getseq(), '0x01', '0x1']
 	return command
 
+def getseq():
+	global ssp_sequence
+	
+	# toggle SEQ between 0x80 and 0x00
+	if ( ssp_sequence == '0x80' ):
+		ssp_sequence = '0x00'
+	else :
+		ssp_sequence = '0x80'
+		
+	returnseq = hex( ssp_address | int(ssp_sequence, 16) )
+	
+	return returnseq
+	
 def crc(command):
 	length = len(command)
 	seed = int('0xFFFF', 16)
 	poly = int('0x8005', 16)
 	crc = seed
-
+	
 	logging.debug( " 1 || " + hex(crc) )
 
 	for i in range(0, length):
@@ -41,9 +66,20 @@ def prepcommand(command, crc):
 	prepedstring = '7F'
 
 	for i in range(0, len(command)):
-		prepedstring += command[i][2:4]
+		if ( len(command[i]) % 2 == 1):
+			prepedstring += '0'
+		
+		prepedstring += command[i][2:]
 	
-	prepedstring += crc[0][2:4] + crc[1][2:4]
+	if ( len(crc[0]) % 2 == 1):
+		prepedstring += '0'
+	
+	prepedstring += crc[0][2:]
+	
+	if ( len(crc[1]) % 2 == 1):
+		prepedstring += '0'
+	
+	prepedstring += crc[1][2:]
 	
 	prepedstring = prepedstring.decode('hex')
 	
