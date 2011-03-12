@@ -65,21 +65,13 @@ def crc(command):
 def prepcommand(command, crc):
 	prepedstring = '7F'
 
+	command = command + crc
+
 	for i in range(0, len(command)):
 		if ( len(command[i]) % 2 == 1):
 			prepedstring += '0'
 		
 		prepedstring += command[i][2:]
-	
-	if ( len(crc[0]) % 2 == 1):
-		prepedstring += '0'
-	
-	prepedstring += crc[0][2:]
-	
-	if ( len(crc[1]) % 2 == 1):
-		prepedstring += '0'
-	
-	prepedstring += crc[1][2:]
 	
 	prepedstring = prepedstring.decode('hex')
 	
