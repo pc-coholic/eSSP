@@ -2,10 +2,74 @@ from struct import *
 import logging
 
 LOG_FILENAME = 'logs/eSSP.log'
-#logging.basicConfig(filename=LOG_FILENAME,level=logging.DEBUG)
+logging.basicConfig(filename=LOG_FILENAME,level=logging.DEBUG)
 
 ssp_sequence = '0x80'
 ssp_address = 0
+
+# Start Of Definition Of SSP_CMD_* Commands
+
+def reset():
+	command = [getseq(), '0x1', '0x1']
+	return command
+
+def set_inhibits(lowchannels, highchannels):
+	command = [getseq(), '0x3', '0x2', lowchannels, highchannels]
+	return command
+
+def bulb_on():
+	command = [getseq(), '0x1', '0x3']
+	return command
+
+def bulb_off():
+	command = [getseq(), '0x1', '0x4']
+	return command
+
+def setup_request():
+	command = [getseq(), '0x1', '0x5']
+	return command
+
+def host_protocol(host_protocol):
+	command = [getseq(), '0x2', '0x6', host_protocol]
+	return command
+
+def poll():
+	command = [getseq(), '0x1', '0x7']
+	return command
+
+def reject_note():
+	command = [getseq(), '0x1', '0x8']
+	return command
+
+def disable():
+	command = [getseq(), '0x1', '0x9']
+	return command
+
+def enable():
+	command = [getseq(), '0x1', '0xA']
+	return command
+
+# SSP_CMD_PROGRAM 0xB not implented
+
+def serial_number():
+	command = [getseq(), '0x1', '0xC']
+	return command
+
+def unit_data():
+	command = [getseq(), '0x1', '0xD']
+	return command
+
+def channel_values():
+	command = [getseq(), '0x1', '0xE']
+	return command
+
+def channel_security():
+	command = [getseq(), '0x1', '0xF']
+	return command
+
+def channel_reteach():
+	command = [getseq(), '0x1', '0xG']
+	return command
 
 def sync():
 	global ssp_sequence
@@ -13,12 +77,31 @@ def sync():
 	#set ssp_sequence to 0x00, so next will be 0x80 by default
 	ssp_sequence = '0x00'
 	
-	command = [getseq(), '0x01', '0x11']
+	command = [getseq(), '0x1', '0x11']
+	return command
+
+# SSP_CMD_DISPENSE 0x12 not implented
+
+# SSP_CMD_PROGRAM_STATUS 0x16 not implented
+
+def last_reject():
+	command = [getseq(), '0x1', '0x17']
+	return command
+
+def hold():
+	command = [getseq(), '0x1', '0x18']
+	return command
+
+# SPP_CMD_MANUFACTURER 0x30 not implented - collides with SSP_CMD_EXPANSION ?!
+
+# SSP_CMD_EXPANSION 0x30 not implented - collides with SSP_CMD_MANUFACTURER ?!
+
+def enable_higher_protocol():
+	command = [getseq(), '0x1', '0x19']
 	return command
 	
-def reset():
-	command = [getseq(), '0x01', '0x1']
-	return command
+# End Of Definition Of SSP_CMD_* Commands
+
 
 def getseq():
 	global ssp_sequence
