@@ -28,7 +28,7 @@ class eSSPc(object):
 
 		return serial
 
-	def getseq():	
+	def getseq(self):	
 		# toggle SEQ between 0x80 and 0x00
 		if ( self.__sequence == '0x80' ):
 			self.__sequence = '0x00'
