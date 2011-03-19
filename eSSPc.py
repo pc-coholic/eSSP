@@ -14,12 +14,12 @@ class eSSPc(object):
 		#set ssp_sequence to 0x00, so next will be 0x80 by default
 		self.__sequence = '0x00'
 		
-		result = self.send([getseq(), '0x1', '0x11'])
+		result = self.send([self.getseq(), '0x1', '0x11'])
 		
 		return result
 
 	def serial_number(self):
-		result = self.send([getseq(), '0x1', '0xC'])
+		result = self.send([self.getseq(), '0x1', '0xC'])
 		
 		serial = 0
 
@@ -35,7 +35,7 @@ class eSSPc(object):
 		else :
 			self.__sequence = '0x80'
 		
-		returnseq = hex( ssp_address | int(ssp_sequence, 16) )
+		returnseq = hex( self.__eSSPId | int(self.__sequence, 16) )
 	
 		return returnseq
 
@@ -85,17 +85,19 @@ class eSSPc(object):
 
 		self.__ser.write(prepedstring)
 		
-		return prepedstring
+		response = self.read()
+		
+		return response
 	
 	def read(self):
-		response = ser.read(3)
-		response += ser.read(ord(response[2]) + 2)
+		response = self.__ser.read(3)
+		response += self.__ser.read(ord(response[2]) + 2)
 		
 		response = self.arrayify_response(response)
 		
 		return response
 
-	def arrayify_response(response):
+	def arrayify_response(self, response):
 		array = []
 		for i in range( 0, len(response) ):
 			array += [hex(ord(response[i]))]
