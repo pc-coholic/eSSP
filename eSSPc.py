@@ -66,7 +66,23 @@ class eSSPc(object):
 
 	def unit_data(self):
 		result = self.send([self.getseq(), '0x1', '0xD'])
-		return result
+
+		fwversion = ''
+		for i in range(5, 9):
+			fwversion += chr(int(result[i], 16))
+
+		country = ''
+		for i in range(9, 12):
+			country += chr(int(result[i], 16))
+
+#		valuemulti = ''
+#		for i in range(12, 15):
+#			valuemulti += chr(int(result[i], 16))
+# chr(int(0x0, 16)) returns \x00 instead of 0 - should be fixed somehow...
+
+		unit_data = [int(result[4], 16), fwversion, country, int(result[14], 16), int(result[15], 16)]
+		
+		return unit_data
 
 	def channel_values(self):
 		result = self.send([self.getseq(), '0x1', '0xE'])
