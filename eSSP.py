@@ -81,7 +81,7 @@ class eSSPc(object):
 # chr(int(0x0, 16)) returns \x00 instead of 0 - should be fixed somehow...
 
 		unit_data = [int(result[4], 16), fwversion, country, int(result[14], 16), int(result[15], 16)]
-		
+
 		return unit_data
 
 	def channel_values(self):
