@@ -10,13 +10,49 @@ class eSSPc(object):
 		self.__eSSPId = eSSPId
 		self.__sequence = '0x80'
 		
-	def sync(self):
-		#set ssp_sequence to 0x00, so next will be 0x80 by default
-		self.__sequence = '0x00'
-		
-		result = self.send([self.getseq(), '0x1', '0x11'])
+# Start Of Definition Of SSP_CMD_* Commands
+	def reset(self):
+		result = self.send([self.getseq(), '0x1', '0x1'])
+		return result
+
+	def set_inhibits(self, lowchannels, highchannels):
+		result = self.send([self.getseq(), '0x3', '0x2', lowchannels, highchannels])
+		return result
+
+	def bulb_on(self):
+		result = self.send([self.getseq(), '0x1', '0x3'])
+		return result
+
+	def bulb_off(self):
+		result = self.send([self.getseq(), '0x1', '0x4'])
+		return result
+
+	def setup_request(self):
+		result = self.send([self.getseq(), '0x1', '0x5'])
+		return result
+
+	def host_protocol(self, host_protocol):
+		result = self.send([self.getseq(), '0x2', '0x6', host_protocol])
+		return result
+
+	def poll(self):
+		result = self.send([self.getseq(), '0x1', '0x7'])
+		return result
+
+	def reject_note(self):
+		result = self.send([self.getseq(), '0x1', '0x8'])
+		return result
+
+	def disable(self):
+		result = self.send([self.getseq(), '0x1', '0x9'])
+		return result
+
+	def enable(self):
+		result = self.send([self.getseq(), '0x1', '0xA'])
 		
 		return result
+
+	# SSP_CMD_PROGRAM 0xB not implented
 
 	def serial_number(self):
 		result = self.send([self.getseq(), '0x1', '0xC'])
@@ -27,6 +63,52 @@ class eSSPc(object):
 			serial += int(result[i], 16) << (8 * (7-i) )	
 
 		return serial
+
+	def unit_data(self):
+		result = self.send([self.getseq(), '0x1', '0xD'])
+		return result
+
+	def channel_values(self):
+		result = self.send([self.getseq(), '0x1', '0xE'])
+		return result
+
+	def channel_security(self):
+		result = self.send([self.getseq(), '0x1', '0xF'])
+		return result
+
+	def channel_reteach(self):
+		result = self.send([self.getseq(), '0x1', '0xG'])
+		return result
+
+	def sync(self):
+		#set ssp_sequence to 0x00, so next will be 0x80 by default
+		self.__sequence = '0x00'
+		
+		result = self.send([self.getseq(), '0x1', '0x11'])
+		
+		return result
+
+	# SSP_CMD_DISPENSE 0x12 not implented
+
+	# SSP_CMD_PROGRAM_STATUS 0x16 not implented
+
+	def last_reject(self):
+		result = self.send([self.getseq(), '0x1', '0x17'])
+		return result
+
+	def hold(self):
+		result = self.send([self.getseq(), '0x1', '0x18'])
+		return result
+
+	# SPP_CMD_MANUFACTURER 0x30 not implented - collides with SSP_CMD_EXPANSION ?!
+
+	# SSP_CMD_EXPANSION 0x30 not implented - collides with SSP_CMD_MANUFACTURER ?!
+
+	def enable_higher_protocol(self):
+		result = self.send([self.getseq(), '0x1', '0x19'])
+		return result
+	
+# End Of Definition Of SSP_CMD_* Commands
 
 	def getseq(self):	
 		# toggle SEQ between 0x80 and 0x00
