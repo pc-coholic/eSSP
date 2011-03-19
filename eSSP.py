@@ -4,7 +4,7 @@ import logging
 LOG_FILENAME = 'logs/eSSP.log'
 #logging.basicConfig(filename=LOG_FILENAME,level=logging.DEBUG)
 
-class eSSPc(object):
+class eSSP(object):
 	def __init__(self, serialport = '/dev/ttyUSB0', eSSPId = 0):
 		self.__ser = serial.Serial(serialport, 9600)
 		self.__eSSPId = eSSPId
