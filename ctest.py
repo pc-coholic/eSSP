@@ -1,7 +1,7 @@
-import eSSPc
+import eSSP
 import time
 
-k = eSSPc.eSSPc('/dev/ttyACM0')
+k = eSSPc.eSSP('/dev/ttyACM0')
 print k.sync()
 print k.serial_number()
 #print k.enable()
