@@ -195,9 +195,11 @@ class eSSP(object):
         
         channels = int(result[4], 16)
         
+        unitdata = self.unit_data()
+
         values = []
         for i in range(0, channels):
-            values.append(int(result[5 + i], 16))
+            values.append(int(result[5 + i], 16) * unitdata[3])
             
         channel_data = [channels, values]
         
