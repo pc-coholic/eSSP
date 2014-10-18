@@ -7,8 +7,8 @@ setup(
     name='eSSP',
     version='1.0.0',
     description='Basic eSSP library',
-    author='',
-    author_email='',
+    author='muccc',
+    author_email='info@muc.ccc.de',
     url='https://github.com/muccc/eSSP',
     packages=['eSSP'],
     classifiers=[
