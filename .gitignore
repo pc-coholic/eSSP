@@ -1,2 +1,4 @@
 *.pyc
 *.*~
+eSSP.egg-info/
+dist
