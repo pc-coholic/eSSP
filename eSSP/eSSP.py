@@ -7,7 +7,7 @@ import datetime
 
 class eSSP(object):
     def __init__(self, serialport = '/dev/ttyUSB0', eSSPId = 0):
-        self._logger = logging.getLogger('logger')
+        self._logger = logging.getLogger(__name__)
 
         self.__ser = serial.Serial(serialport, 9600)
         self.__eSSPId = eSSPId
