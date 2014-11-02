@@ -5,7 +5,7 @@ except ImportError:
 
 setup(
     name='eSSP',
-    version='1.0.0',
+    version='1.0.1',
     description='Basic eSSP library',
     author='muccc',
     author_email='info@muc.ccc.de',
