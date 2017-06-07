@@ -4,11 +4,13 @@ import logging
 import serial
 
 
-class eSSP(object):
+class Essp(object):
+    """General class for talking to an eSSP device."""
 
-    def __init__(self, serialport='/dev/ttyUSB0', eSSPId=0):
+    def __init__(self, serialport='/dev/ttyUSB0', esspid=0):
+        """Initialize a new eSSP object."""
         self.__ser = serial.Serial(serialport, 9600)
-        self.__eSSPId = eSSPId
+        self.__esspid = esspid
         self.__sequence = '0x80'
 
         self._logger = logging.getLogger(__name__)
@@ -98,28 +100,33 @@ class eSSP(object):
 #       return result
 
     def poll(self):
-        # Poll the device
-        # 0xF1 = Slave Reset (right after booting up)
-        # 0xEF = Read Note + Channel Number array()
-        # 0xEE = Credit Note + Channel Number array()
-        # 0xED = Rejecting
-        # 0xEC = Rejected
-        # 0xCC = Stacking
-        # 0xEB = Stacked
-        # 0xEA = Safe Jam
-        # 0xE9 = Unsafe Jam
-        # 0xE8 = Disabled
-        # 0xE6 = Fraud attempt + Channel Number array()
-        # 0xE7 = Stacker full
-        # 0xE1 = Note cleared from front at reset (Protocol v3) + Channel Number array()
-        # 0xE2 = Note cleared into cashbox at reset (Protocol v3) + Channel Number array()
-        # 0xE3 = Cash Box Removed (Protocol v3)
-        # 0xE4 = Cash Box Replaced (Protocol v3)
+        """
+        Poll the device.
+
+        0xF1 = Slave Reset (right after booting up)
+        0xEF = Read Note + Channel Number array()
+        0xEE = Credit Note + Channel Number array()
+        0xED = Rejecting
+        0xEC = Rejected
+        0xCC = Stacking
+        0xEB = Stacked
+        0xEA = Safe Jam
+        0xE9 = Unsafe Jam
+        0xE8 = Disabled
+        0xE6 = Fraud attempt + Channel Number array()
+        0xE7 = Stacker full
+        0xE1 = Note cleared from front at reset (Protocol v3)
+                 + Channel Number array()
+        0xE2 = Note cleared into cashbox at reset (Protocol v3)
+                 + Channel Number array()
+        0xE3 = Cash Box Removed (Protocol v3)
+        0xE4 = Cash Box Replaced (Protocol v3)
+        """
         result = self.send([self.getseq(), '0x1', '0x7'], 1)
 
         poll_data = []
         for i in range(3, int(result[2], 16) + 3):
-            if result[i] == '0xef' or result[i] == '0xee' or result[i] == '0xe6' or result[i] == '0xe1' or result[i] == '0xe2':
+            if result[i] in ('0xef', '0xee', '0xe6', '0xe1', '0xe2'):
                 poll_data.append([result[i], int(result[i + 1], 16)])
                 i += 1
             else:
@@ -134,7 +141,7 @@ class eSSP(object):
 
     def disable(self):
         """
-        Disables the device.
+        Disable the device.
 
         Will resume to work only when beeing enable()'d again.
         """
@@ -231,7 +238,7 @@ class eSSP(object):
 
     def channel_reteach(self):
         """
-        Returns the (somewhat un-useful?) Re-Teach Data by Channel.
+        Return the (somewhat un-useful?) Re-Teach Data by Channel.
 
         Number of Channels
         Value of Reteach-Date array()
@@ -300,9 +307,9 @@ class eSSP(object):
         result = self.send([self.getseq(), '0x1', '0x18'])
         return result
 
-    # SPP_CMD_MANUFACTURER 0x30 not implented - collides with SSP_CMD_EXPANSION ?!
+    # SPP_CMD_MANUFACTURER 0x30 not implented, collides with SSP_CMD_EXPANSION?
 
-    # SSP_CMD_EXPANSION 0x30 not implented - collides with SSP_CMD_MANUFACTURER ?!
+    # SSP_CMD_EXPANSION 0x30 not implented, collides with SSP_CMD_MANUFACTURER?
 
     def enable_higher_protocol(self):
         """Enable functions from implemented with version >= 3."""
@@ -318,7 +325,7 @@ class eSSP(object):
         else:
             self.__sequence = '0x80'
 
-        returnseq = hex(self.__eSSPId | int(self.__sequence, 16))
+        returnseq = hex(self.__esspid | int(self.__sequence, 16))
         return returnseq
 
     def crc(self, command):
@@ -414,7 +421,8 @@ class eSSP(object):
 
             crc = self.crc(crc_command)
 
-            if (response[len(response)-2] != crc[0]) & (response[len(response)-1] != crc[1]):
+            if (response[len(response) - 2] != crc[0]) & \
+                    (response[len(response) - 1] != crc[1]):
                 self._logger.debug("Failed to verify crc.")
             else:
                 processed_response = response[3]
