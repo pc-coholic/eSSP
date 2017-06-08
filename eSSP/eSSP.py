@@ -7,10 +7,10 @@ import serial
 class eSSP(object):  # noqa
     """General class for talking to an eSSP device."""
 
-    def __init__(self, serialport='/dev/ttyUSB0', esspid=0):
+    def __init__(self, serialport='/dev/ttyUSB0', eSSPId=0):
         """Initialize a new eSSP object."""
         self.__ser = serial.Serial(serialport, 9600)
-        self.__esspid = esspid
+        self.__eSSPId = eSSPId
         self.__sequence = '0x80'
 
         self._logger = logging.getLogger(__name__)
@@ -325,7 +325,7 @@ class eSSP(object):  # noqa
         else:
             self.__sequence = '0x80'
 
-        returnseq = hex(self.__esspid | int(self.__sequence, 16))
+        returnseq = hex(self.__eSSPId | int(self.__sequence, 16))
         return returnseq
 
     def crc(self, command):
