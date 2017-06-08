@@ -4,18 +4,28 @@ import logging
 import serial
 
 
+class eSSPError(IOError):  # noqa
+    """Generic error exception for eSSP problems."""
+
+    pass
+
+
+class eSSPTimeoutError(eSSPError):  # noqa
+    """Indicates a timeout while communicating with the eSSP device."""
+
+    pass
+
+
 class eSSP(object):  # noqa
     """General class for talking to an eSSP device."""
 
-    def __init__(self, serialport='/dev/ttyUSB0', eSSPId=0):
+    def __init__(self, serialport='/dev/ttyUSB0', eSSPId=0, timeout=None):  # noqa
         """Initialize a new eSSP object."""
-        self.__ser = serial.Serial(serialport, 9600)
+        self.__ser = serial.Serial(serialport, 9600, timeout=timeout)
         self.__eSSPId = eSSPId
         self.__sequence = '0x80'
 
         self._logger = logging.getLogger(__name__)
-        self._logger.debug("")
-        self._logger.debug("")
         self._logger.debug("Startup at " + str(datetime.datetime.now()))
 
     def reset(self):
@@ -383,6 +393,9 @@ class eSSP(object):  # noqa
 
     def read(self, no_process=0):
         response = self.__ser.read(3)
+        if len(response) < 3:
+            # we need the response length in order to continue
+            raise eSSPTimeoutError()
         response += self.__ser.read(ord(response[2]) + 2)
 
         response = self.arrayify_response(response)
