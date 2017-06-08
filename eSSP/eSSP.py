@@ -4,7 +4,7 @@ import logging
 import serial
 
 
-class Essp(object):
+class eSSP(object):  # noqa
     """General class for talking to an eSSP device."""
 
     def __init__(self, serialport='/dev/ttyUSB0', esspid=0):
