@@ -21,7 +21,12 @@ class eSSP(object):  # noqa
 
     def __init__(self, serialport='/dev/ttyUSB0', eSSPId=0, timeout=None):  # noqa
         """Initialize a new eSSP object."""
-        self.__ser = serial.Serial(serialport, 9600, timeout=timeout)
+        if timeout is None or timeout == 0:
+            serial_timeout = timeout
+        else:
+            serial_timeout = 1
+        self.timeout = timeout
+        self.__ser = serial.Serial(serialport, 9600, timeout=serial_timeout)
         self.__eSSPId = eSSPId
         self.__sequence = '0x80'
 
@@ -392,13 +397,27 @@ class eSSP(object):  # noqa
         return response
 
     def read(self, no_process=0):
-        response = self.__ser.read(3)
-        if len(response) < 3:
-            # we need the response length in order to continue
-            raise eSSPTimeoutError()
-        response += self.__ser.read(ord(response[2]) + 2)
+        attempt = 0
+        bytes_read = []
+        target_length = 3
+        while True:
+            byte = self.__ser.read(1)
+            if byte:
+                bytes_read += byte
+            else:
+                attempt += 1
+                if attempt > self.timeout:
+                    raise eSSPTimeoutError()
 
-        response = self.arrayify_response(response)
+            if len(bytes_read) >= 3 and target_length == 3:
+                # extract actual message length
+                target_length += ord(bytes_read[2]) + 2
+
+            if target_length > 3 and len(bytes_read) == target_length:
+                # read the complete response
+                break
+
+        response = self.arrayify_response(bytes_read)
         self._logger.debug("IN:  " + ' '.join(response))
 
         if no_process == 0:
