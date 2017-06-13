@@ -406,7 +406,7 @@ class eSSP(object):  # noqa
                 bytes_read += byte
             else:
                 attempt += 1
-                if attempt > self.timeout:
+                if attempt >= self.timeout:
                     raise eSSPTimeoutError()
 
             if len(bytes_read) >= 3 and target_length == 3:
