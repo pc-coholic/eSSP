@@ -81,7 +81,7 @@ class eSSP(object):  # noqa
         # 2 = Std Security
         # 3 = High Security
         # 4 = Inhibited
-        result = self.send([self.getseq(), '0x1', '0x5'], 1)
+        result = self.send([self.getseq(), '0x1', '0x5'], False)
 
         unittype = int(result[4], 16)
 
@@ -146,7 +146,7 @@ class eSSP(object):  # noqa
         0xE3 = Cash Box Removed (Protocol v3)
         0xE4 = Cash Box Replaced (Protocol v3)
         """
-        result = self.send([self.getseq(), '0x1', '0x7'], 1)
+        result = self.send([self.getseq(), '0x1', '0x7'], False)
 
         poll_data = []
         for i in range(3, int(result[2], 16) + 3):
@@ -181,7 +181,7 @@ class eSSP(object):  # noqa
 
     def serial_number(self):
         """Return formatted serialnumber."""
-        result = self.send([self.getseq(), '0x1', '0xC'], 1)
+        result = self.send([self.getseq(), '0x1', '0xC'], False)
 
         serial = 0
         for i in range(4, 8):
@@ -196,7 +196,7 @@ class eSSP(object):  # noqa
         # Country-Code
         # Value-Multiplier
         # Protocol-Version
-        result = self.send([self.getseq(), '0x1', '0xD'], 1)
+        result = self.send([self.getseq(), '0x1', '0xD'], False)
 
         unittype = int(result[4], 16)
 
@@ -225,7 +225,7 @@ class eSSP(object):  # noqa
         - Number of Channels
         - Values of Channels
         """
-        result = self.send([self.getseq(), '0x1', '0xE'], 1)
+        result = self.send([self.getseq(), '0x1', '0xE'], False)
 
         channels = int(result[4], 16)
 
@@ -249,7 +249,7 @@ class eSSP(object):  # noqa
         3 = High Security
         4 = Inhibited
         """
-        result = self.send([self.getseq(), '0x1', '0xF'], 1)
+        result = self.send([self.getseq(), '0x1', '0xF'], False)
 
         channels = int(result[4], 16)
 
@@ -267,7 +267,7 @@ class eSSP(object):  # noqa
         Number of Channels
         Value of Reteach-Date array()
         """
-        result = self.send([self.getseq(), '0x1', '0x10'], 1)
+        result = self.send([self.getseq(), '0x1', '0x10'], False)
 
         channels = int(result[4], 16)
 
@@ -324,7 +324,7 @@ class eSSP(object):  # noqa
         0x19 = Width Detect Fail
         0x1A = Short Note Detected
         """
-        result = self.send([self.getseq(), '0x1', '0x17'], 1)
+        result = self.send([self.getseq(), '0x1', '0x17'], False)
         return result[4]
 
     def hold(self):
@@ -379,7 +379,7 @@ class eSSP(object):  # noqa
         crc = [hex((crc & 0xFF)), hex(((crc >> 8) & 0xFF))]
         return crc
 
-    def send(self, command, no_process=0):
+    def send(self, command, process=True):
         crc = self.crc(command)
 
         prepedstring = '7F'
@@ -399,13 +399,10 @@ class eSSP(object):  # noqa
 
         self.__ser.write(prepedstring)
 
-        if no_process == 1:
-            response = self.read(1)
-        else:
-            response = self.read()
+        response = self.read(process)
         return response
 
-    def read(self, no_process=0):
+    def read(self, process=True):
         """Read the requested data from the serial port."""
         bytes_read = []
         # initial response length is only the header.
@@ -432,7 +429,7 @@ class eSSP(object):  # noqa
         response = self.arrayify_response(bytes_read)
         self._logger.debug("IN:  " + ' '.join(response))
 
-        if no_process == 0:
+        if process:
             response = self.process_response(response)
         return response
 
