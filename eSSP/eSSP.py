@@ -20,11 +20,20 @@ class eSSP(object):  # noqa
     """General class for talking to an eSSP device."""
 
     def __init__(self, serialport='/dev/ttyUSB0', eSSPId=0, timeout=None):  # noqa
-        """Initialize a new eSSP object."""
+        """
+        Initialize a new eSSP object.
+
+        The timeout parameter corresponds to the pySerial timeout parameter,
+        but is used a bit diffreent internally. When the parameter isn't set
+        to None (blocking, no timeout) or 0, (non-blocking, return directly),
+        we set a timeout of 0.1 seconds on the serial port, and perform reads
+        until the specified timeout is expired. When the timeout is reached
+        before the requested data is read, a eSSPTimeoutError will be raised.
+        """
         if timeout is None or timeout == 0:
             serial_timeout = timeout
         else:
-            serial_timeout = 1
+            serial_timeout = 0.1
         self.timeout = timeout
         self.__ser = serial.Serial(serialport, 9600, timeout=serial_timeout)
         self.__eSSPId = eSSPId
@@ -397,24 +406,26 @@ class eSSP(object):  # noqa
         return response
 
     def read(self, no_process=0):
-        attempt = 0
+        """Read the requested data from the serial port."""
         bytes_read = []
-        target_length = 3
+        # initial response length is only the header.
+        expected_bytes = 3
+        timeout_expired = datetime.datetime.now() + datetime.timedelta(seconds=self.timeout)
         while True:
-            byte = self.__ser.read(1)
+            byte = self.__ser.read()
             if byte:
                 bytes_read += byte
             else:
-                attempt += 1
-                if attempt >= self.timeout:
-                    raise eSSPTimeoutError()
+                if datetime.datetime.now() > timeout_expired:
+                    raise eSSPTimeoutError('Unable to read the expected response of {} bytes within {} seconds'.format(
+                                           expected_bytes, self.timeout))
 
-            if len(bytes_read) >= 3 and target_length == 3:
-                # extract actual message length
-                target_length += ord(bytes_read[2]) + 2
+            if expected_bytes == 3 and len(bytes_read) >= 3:
+                # extract the actual message length
+                expected_bytes += ord(bytes_read[2]) + 2
 
-            if target_length > 3 and len(bytes_read) == target_length:
-                # read the complete response
+            if expected_bytes > 3 and len(bytes_read) == expected_bytes:
+                # we've read the complete response
                 break
 
         response = self.arrayify_response(bytes_read)
