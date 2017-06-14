@@ -24,7 +24,7 @@ class eSSP(object):  # noqa
         Initialize a new eSSP object.
 
         The timeout parameter corresponds to the pySerial timeout parameter,
-        but is used a bit diffreent internally. When the parameter isn't set
+        but is used a bit different internally. When the parameter isn't set
         to None (blocking, no timeout) or 0, (non-blocking, return directly),
         we set a timeout of 0.1 seconds on the serial port, and perform reads
         until the specified timeout is expired. When the timeout is reached
@@ -416,6 +416,7 @@ class eSSP(object):  # noqa
             if byte:
                 bytes_read += byte
             else:
+                # when the socket doesn't give us any data, evaluate the timeout
                 if datetime.datetime.now() > timeout_expired:
                     raise eSSPTimeoutError('Unable to read the expected response of {} bytes within {} seconds'.format(
                                            expected_bytes, self.timeout))
