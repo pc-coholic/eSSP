@@ -393,7 +393,7 @@ class eSSP(object):  # noqa
             prepedstring += command[i][2:]
 
         self._logger.debug("OUT: 0x" + ' 0x'.join([prepedstring[x:x + 2]
-                           for x in xrange(0, len(prepedstring), 2)]))
+                           for x in range(0, len(prepedstring), 2)]))
 
         prepedstring = prepedstring.decode('hex')
 
