@@ -20,8 +20,22 @@ class eSSP(object):  # noqa
     """General class for talking to an eSSP device."""
 
     def __init__(self, serialport='/dev/ttyUSB0', eSSPId=0, timeout=None):  # noqa
-        """Initialize a new eSSP object."""
-        self.__ser = serial.Serial(serialport, 9600, timeout=timeout)
+        """
+        Initialize a new eSSP object.
+
+        The timeout parameter corresponds to the pySerial timeout parameter,
+        but is used a bit different internally. When the parameter isn't set
+        to None (blocking, no timeout) or 0, (non-blocking, return directly),
+        we set a timeout of 0.1 seconds on the serial port, and perform reads
+        until the specified timeout is expired. When the timeout is reached
+        before the requested data is read, a eSSPTimeoutError will be raised.
+        """
+        if timeout is None or timeout == 0:
+            serial_timeout = timeout
+        else:
+            serial_timeout = 0.1
+        self.timeout = timeout
+        self.__ser = serial.Serial(serialport, 9600, timeout=serial_timeout)
         self.__eSSPId = eSSPId
         self.__sequence = '0x80'
 
@@ -67,7 +81,7 @@ class eSSP(object):  # noqa
         # 2 = Std Security
         # 3 = High Security
         # 4 = Inhibited
-        result = self.send([self.getseq(), '0x1', '0x5'], 1)
+        result = self.send([self.getseq(), '0x1', '0x5'], False)
 
         unittype = int(result[4], 16)
 
@@ -132,7 +146,7 @@ class eSSP(object):  # noqa
         0xE3 = Cash Box Removed (Protocol v3)
         0xE4 = Cash Box Replaced (Protocol v3)
         """
-        result = self.send([self.getseq(), '0x1', '0x7'], 1)
+        result = self.send([self.getseq(), '0x1', '0x7'], False)
 
         poll_data = []
         for i in range(3, int(result[2], 16) + 3):
@@ -167,7 +181,7 @@ class eSSP(object):  # noqa
 
     def serial_number(self):
         """Return formatted serialnumber."""
-        result = self.send([self.getseq(), '0x1', '0xC'], 1)
+        result = self.send([self.getseq(), '0x1', '0xC'], False)
 
         serial = 0
         for i in range(4, 8):
@@ -182,7 +196,7 @@ class eSSP(object):  # noqa
         # Country-Code
         # Value-Multiplier
         # Protocol-Version
-        result = self.send([self.getseq(), '0x1', '0xD'], 1)
+        result = self.send([self.getseq(), '0x1', '0xD'], False)
 
         unittype = int(result[4], 16)
 
@@ -211,7 +225,7 @@ class eSSP(object):  # noqa
         - Number of Channels
         - Values of Channels
         """
-        result = self.send([self.getseq(), '0x1', '0xE'], 1)
+        result = self.send([self.getseq(), '0x1', '0xE'], False)
 
         channels = int(result[4], 16)
 
@@ -235,7 +249,7 @@ class eSSP(object):  # noqa
         3 = High Security
         4 = Inhibited
         """
-        result = self.send([self.getseq(), '0x1', '0xF'], 1)
+        result = self.send([self.getseq(), '0x1', '0xF'], False)
 
         channels = int(result[4], 16)
 
@@ -253,7 +267,7 @@ class eSSP(object):  # noqa
         Number of Channels
         Value of Reteach-Date array()
         """
-        result = self.send([self.getseq(), '0x1', '0x10'], 1)
+        result = self.send([self.getseq(), '0x1', '0x10'], False)
 
         channels = int(result[4], 16)
 
@@ -310,7 +324,7 @@ class eSSP(object):  # noqa
         0x19 = Width Detect Fail
         0x1A = Short Note Detected
         """
-        result = self.send([self.getseq(), '0x1', '0x17'], 1)
+        result = self.send([self.getseq(), '0x1', '0x17'], False)
         return result[4]
 
     def hold(self):
@@ -365,7 +379,7 @@ class eSSP(object):  # noqa
         crc = [hex((crc & 0xFF)), hex(((crc >> 8) & 0xFF))]
         return crc
 
-    def send(self, command, no_process=0):
+    def send(self, command, process=True):
         crc = self.crc(command)
 
         prepedstring = '7F'
@@ -379,29 +393,43 @@ class eSSP(object):  # noqa
             prepedstring += command[i][2:]
 
         self._logger.debug("OUT: 0x" + ' 0x'.join([prepedstring[x:x + 2]
-                           for x in xrange(0, len(prepedstring), 2)]))
+                           for x in range(0, len(prepedstring), 2)]))
 
         prepedstring = prepedstring.decode('hex')
 
         self.__ser.write(prepedstring)
 
-        if no_process == 1:
-            response = self.read(1)
-        else:
-            response = self.read()
+        response = self.read(process)
         return response
 
-    def read(self, no_process=0):
-        response = self.__ser.read(3)
-        if len(response) < 3:
-            # we need the response length in order to continue
-            raise eSSPTimeoutError()
-        response += self.__ser.read(ord(response[2]) + 2)
+    def read(self, process=True):
+        """Read the requested data from the serial port."""
+        bytes_read = []
+        # initial response length is only the header.
+        expected_bytes = 3
+        timeout_expired = datetime.datetime.now() + datetime.timedelta(seconds=self.timeout)
+        while True:
+            byte = self.__ser.read()
+            if byte:
+                bytes_read += byte
+            else:
+                # when the socket doesn't give us any data, evaluate the timeout
+                if datetime.datetime.now() > timeout_expired:
+                    raise eSSPTimeoutError('Unable to read the expected response of {} bytes within {} seconds'.format(
+                                           expected_bytes, self.timeout))
 
-        response = self.arrayify_response(response)
+            if expected_bytes == 3 and len(bytes_read) >= 3:
+                # extract the actual message length
+                expected_bytes += ord(bytes_read[2]) + 2
+
+            if expected_bytes > 3 and len(bytes_read) == expected_bytes:
+                # we've read the complete response
+                break
+
+        response = self.arrayify_response(bytes_read)
         self._logger.debug("IN:  " + ' '.join(response))
 
-        if no_process == 0:
+        if process:
             response = self.process_response(response)
         return response
 
