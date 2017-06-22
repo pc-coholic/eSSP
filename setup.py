@@ -5,11 +5,11 @@ except ImportError:
 
 setup(
     name='eSSP',
-    version='1.0.1',
+    version='1.0.2',
     description='Basic eSSP library',
     author='muccc',
-    author_email='info@muc.ccc.de',
-    url='https://github.com/muccc/eSSP',
+    author_email='martin@pc-coholic.de',
+    url='https://github.com/pc-coholic/eSSP',
     packages=['eSSP'],
     classifiers=[
         "Programming Language :: Python :: 2",
