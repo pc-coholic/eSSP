@@ -34,7 +34,7 @@ class eSSP(object):  # noqa
             serial_timeout = timeout
         else:
             serial_timeout = 0.1
-        self.timeout = timeout
+        self.timeout = timeout or 0
         self.__ser = serial.Serial(serialport, 9600, timeout=serial_timeout)
         self.__eSSPId = eSSPId
         self.__sequence = '0x80'
@@ -344,7 +344,7 @@ class eSSP(object):  # noqa
 
     def getseq(self):
         # toggle SEQ between 0x80 and 0x00
-        if (self.__sequence == '0x80'):
+        if self.__sequence == '0x80':
             self.__sequence = '0x00'
         else:
             self.__sequence = '0x80'
@@ -395,7 +395,7 @@ class eSSP(object):  # noqa
         self._logger.debug("OUT: 0x" + ' 0x'.join([prepedstring[x:x + 2]
                            for x in range(0, len(prepedstring), 2)]))
 
-        prepedstring = prepedstring.decode('hex')
+        prepedstring = bytes.fromhex(prepedstring)
 
         self.__ser.write(prepedstring)
 
@@ -420,7 +420,7 @@ class eSSP(object):  # noqa
 
             if expected_bytes == 3 and len(bytes_read) >= 3:
                 # extract the actual message length
-                expected_bytes += ord(bytes_read[2]) + 2
+                expected_bytes += int(bytes_read[2]) + 2
 
             if expected_bytes > 3 and len(bytes_read) == expected_bytes:
                 # we've read the complete response
@@ -436,7 +436,7 @@ class eSSP(object):  # noqa
     def arrayify_response(self, response):
         array = []
         for i in range(0, len(response)):
-            array += [hex(ord(response[i]))]
+            array += [hex(int(response[i]))]
         return array
 
     def process_response(self, response):

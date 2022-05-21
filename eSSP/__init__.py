@@ -1,1 +1,1 @@
-from eSSP import eSSP, eSSPError, eSSPTimeoutError
+from .eSSP import eSSP, eSSPError, eSSPTimeoutError
